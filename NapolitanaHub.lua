@@ -1,4 +1,4 @@
--- Napolitana Hub - Edição Completa (Anti-Lag Pro Da Hood)
+-- Napolitana Hub - PARTE 1
 local CoreGui = game:GetService("CoreGui")
 local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
@@ -9,14 +9,17 @@ local VirtualUser = game:GetService("VirtualUser")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
--- Prevenção Anti-AFK Integrada
+-- Variável Global para Manter a Cor da Névoa
+local savedFogColor = nil
+
+-- Prevenção Anti-AFK
 LocalPlayer.Idled:Connect(function()
     VirtualUser:Button2Down(Vector2.new(0,0), Camera.CFrame)
     task.wait(1)
     VirtualUser:Button2Up(Vector2.new(0,0), Camera.CFrame)
 end)
 
--- 1. Criar ScreenGui Principal
+-- Interface Principal
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "NapolitanaHubGUI"
 screenGui.ResetOnSpawn = false
@@ -24,7 +27,7 @@ screenGui.ResetOnSpawn = false
 local parentTarget = (gethui and gethui()) or CoreGui
 screenGui.Parent = parentTarget
 
--- 2. Botão Fixo Toggle UI
+-- Botão Toggle UI
 local toggleButton = Instance.new("TextButton")
 toggleButton.Name = "ToggleButton"
 toggleButton.Size = UDim2.new(0, 95, 0, 32)
@@ -45,7 +48,7 @@ toggleStroke.Color = Color3.fromRGB(225, 110, 150)
 toggleStroke.Thickness = 1.5
 toggleStroke.Parent = toggleButton
 
--- 3. Janela Principal (Main Frame)
+-- Janela Principal
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
 mainFrame.Size = UDim2.new(0, 340, 0, 340)
@@ -78,7 +81,7 @@ toggleButton.MouseButton1Click:Connect(function()
     mainFrame.Visible = not mainFrame.Visible
 end)
 
--- TÍTULO DA JANELA
+-- Título
 local hubTitle = Instance.new("TextLabel")
 hubTitle.Size = UDim2.new(1, 0, 0, 22)
 hubTitle.Position = UDim2.new(0, 0, 0, 4)
@@ -89,7 +92,7 @@ hubTitle.Font = Enum.Font.FredokaOne
 hubTitle.TextSize = 14
 hubTitle.Parent = mainFrame
 
--- 4. Barra Superior de Navegação
+-- Abas
 local tabHolder = Instance.new("Frame")
 tabHolder.Size = UDim2.new(1, -20, 0, 28)
 tabHolder.Position = UDim2.new(0, 10, 0, 28)
@@ -177,7 +180,7 @@ local function createOption(parent, name, posY, callback)
     local active = false
     box.MouseButton1Click:Connect(function()
         active = not active
-        if active me
+        if active then
             box.Text = "✓"
             box.TextColor3 = Color3.fromRGB(255, 255, 255)
             box.BackgroundColor3 = Color3.fromRGB(225, 90, 130)
@@ -189,24 +192,14 @@ local function createOption(parent, name, posY, callback)
     end)
 end
 
--- 5. ABA MAIN (CONFIGURAÇÕES)
-
--- ANTILAG AVANÇADO DA HOOD
+-- 1. ANTILAG
 local antiLagConnection = nil
-
 createOption(mainContent, "ANTILAG DA HOOD", 10, function(state)
     if state then
-        -- Desativa iluminação pesada
         Lighting.GlobalShadows = false
-        Lighting.FogEnd = 9e9
         Lighting.Technology = Enum.Technology.Compatibility
-
-        if workspace:FindFirstChildOfClass("Terrain") then
-            local terrain = workspace:FindFirstChildOfClass("Terrain")
-            terrain.WaterWaveSize = 0
-            terrain.WaterWaveSpeed = 0
-            terrain.WaterReflectance = 0
-            terrain.WaterTransparency = 0
+        if savedFogColor == nil then
+            Lighting.FogEnd = 9e9
         end
 
         for _, effect in pairs(Lighting:GetChildren()) do
@@ -215,28 +208,7 @@ createOption(mainContent, "ANTILAG DA HOOD", 10, function(state)
             end
         end
 
-        -- Limpa texturas do mapa e objetos pesados
-        task.spawn(function()
-            local items = workspace:GetDescendants()
-            for i, part in ipairs(items) do
-                if part:IsA("BasePart") then
-                    part.Material = Enum.Material.SmoothPlastic
-                    part.CastShadow = false
-                elseif part:IsA("Decal") or part:IsA("Texture") then
-                    part.Transparency = 1
-                elseif part:IsA("ParticleEmitter") or part:IsA("Trail") or part:IsA("Smoke") or part:IsA("Fire") or part:IsA("Sparkles") then
-                    part.Enabled = false
-                end
-
-                if i % 150 == 0 then
-                    task.wait()
-                end
-            end
-        end)
-
-        -- Loop de Limpeza de Tiros, Marcas e Objetos Soltos (Específico para Da Hood)
         antiLagConnection = RunService.Heartbeat:Connect(function()
-            -- Limpa cápsulas de bala, tiros soltos e marcas de sangue no chão
             local ignoredFolder = workspace:FindFirstChild("Ignored")
             if ignoredFolder then
                 for _, obj in pairs(ignoredFolder:GetChildren()) do
@@ -245,17 +217,9 @@ createOption(mainContent, "ANTILAG DA HOOD", 10, function(state)
                     end
                 end
             end
-
-            -- Desativa efeitos visuais gerados por armas
-            for _, p in pairs(workspace:GetChildren()) do
-                if p.Name == "Ray" or p.Name == "Impact" or p.Name == "BulletHole" then
-                    p:Destroy()
-                end
-            end
         end)
     else
         Lighting.GlobalShadows = true
-        Lighting.FogEnd = 1000
         if antiLagConnection then
             antiLagConnection:Disconnect()
             antiLagConnection = nil
@@ -263,7 +227,7 @@ createOption(mainContent, "ANTILAG DA HOOD", 10, function(state)
     end
 end)
 
--- SPEED
+-- 2. SPEED
 local maxSpeed = 167
 local speedEnabled = false
 local speedGuiInstance = nil
@@ -286,12 +250,7 @@ createOption(mainContent, "SPEED", 40, function(state)
         mainFrameSpeed.Position = UDim2.new(1, -150, 0, 45) 
         mainFrameSpeed.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         mainFrameSpeed.BackgroundTransparency = 0.4
-        mainFrameSpeed.BorderSizePixel = 0
         mainFrameSpeed.Parent = speedGuiInstance
-
-        local cornerSpeed = Instance.new("UICorner")
-        cornerSpeed.CornerRadius = UDim.new(0, 6)
-        cornerSpeed.Parent = mainFrameSpeed
 
         local speedButton = Instance.new("TextButton")
         speedButton.Size = UDim2.new(1, 0, 1, 0)
@@ -326,8 +285,9 @@ createOption(mainContent, "SPEED", 40, function(state)
         end
     end
 end)
+-- Napolitana Hub - PARTE 2
 
--- CAMLOCK
+-- 3. CAMLOCK
 local camlockAtivo = false
 local alvoAtual = nil
 local PREDICT = 0.138
@@ -346,7 +306,6 @@ textLabel.Size = UDim2.new(1, 0, 1, 0)
 textLabel.BackgroundTransparency = 1
 textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 textLabel.TextScaled = true
-textLabel.TextStrokeTransparency = 0
 
 local function obterAlvoProximo()
     local melhorAlvo = nil
@@ -370,9 +329,7 @@ RunService.RenderStepped:Connect(function()
     if camlockAtivo and alvoAtual and alvoAtual:FindFirstChild("HumanoidRootPart") then
         local root = alvoAtual.HumanoidRootPart
         local posPredict = root.Position + (root.AssemblyLinearVelocity * PREDICT)
-        
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, posPredict)
-        
         highlight.Parent = alvoAtual
         nameTag.Parent = root
         textLabel.Text = alvoAtual.Name
@@ -394,9 +351,7 @@ createOption(mainContent, "CAMLOCK", 70, function(state)
         lockButton.Position = UDim2.new(0.8, -70, 0.5, -30)
         lockButton.Text = "🔒"
         lockButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        
-        local btnCorner = Instance.new("UICorner", lockButton)
-        btnCorner.CornerRadius = UDim.new(0, 30)
+        Instance.new("UICorner", lockButton).CornerRadius = UDim.new(0, 30)
 
         lockButton.MouseButton1Click:Connect(function()
             camlockAtivo = not camlockAtivo
@@ -420,12 +375,27 @@ createOption(mainContent, "CAMLOCK", 70, function(state)
     end
 end)
 
--- HITBOX EXTENDER
+-- 4. HITBOX EXTENDER
 local hitboxEnabled = false
 local headSize = 20
 
+local function resetHitboxes()
+    for _, v in pairs(Players:GetPlayers()) do
+        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+            pcall(function()
+                local hrp = v.Character.HumanoidRootPart
+                hrp.Size = Vector3.new(2, 2, 1)
+                hrp.Transparency = 1
+            end)
+        end
+    end
+end
+
 createOption(mainContent, "HITBOX EXTENDER", 100, function(state)
     hitboxEnabled = state
+    if not state then
+        resetHitboxes()
+    end
 end)
 
 local hitboxBox = Instance.new("TextBox")
@@ -437,20 +407,11 @@ hitboxBox.Text = tostring(headSize)
 hitboxBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 hitboxBox.Font = Enum.Font.FredokaOne
 hitboxBox.TextSize = 12
-hitboxBox.ClearTextOnFocus = false
 hitboxBox.Parent = mainContent
-
-Instance.new("UICorner", hitboxBox).CornerRadius = UDim.new(0, 4)
-local hbStroke = Instance.new("UIStroke")
-hbStroke.Color = Color3.fromRGB(225, 110, 150)
-hbStroke.Thickness = 1
-hbStroke.Parent = hitboxBox
 
 hitboxBox:GetPropertyChangedSignal("Text"):Connect(function()
     local val = tonumber(hitboxBox.Text)
-    if val then
-        headSize = val
-    end
+    if val then headSize = val end
 end)
 
 RunService.RenderStepped:Connect(function()
@@ -470,8 +431,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 6. CAIXA PARA LOCALIZAR AMIGOS (ESP NICK)
-
+-- 5. LOCALIZAR AMIGOS (ESP DISPLAY + HP)
 local searchLabel = Instance.new("TextLabel")
 searchLabel.Size = UDim2.new(1, -40, 0, 18)
 searchLabel.Position = UDim2.new(0, 20, 0, 138)
@@ -488,82 +448,147 @@ searchBox.Name = "SearchFriendBox"
 searchBox.Size = UDim2.new(1, -40, 0, 28)
 searchBox.Position = UDim2.new(0, 20, 0, 160)
 searchBox.BackgroundColor3 = Color3.fromRGB(30, 20, 15)
-searchBox.Text = ""
 searchBox.PlaceholderText = "Ex: NomeDoAmigo..."
-searchBox.PlaceholderColor3 = Color3.fromRGB(150, 130, 120)
 searchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 searchBox.Font = Enum.Font.FredokaOne
 searchBox.TextSize = 13
-searchBox.ClearTextOnFocus = false
 searchBox.Parent = mainContent
 
-Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0, 6)
-local searchStroke = Instance.new("UIStroke")
-searchStroke.Color = Color3.fromRGB(225, 110, 150)
-searchStroke.Thickness = 1
-searchStroke.Parent = searchBox
-
-local activeHighlights = {}
+local trackedPlayers = {}
+local charConnections = {}
 
 local function removeHighlights()
-    for _, gui in pairs(activeHighlights) do
-        if gui then gui:Destroy() end
+    for _, item in pairs(trackedPlayers) do
+        if item.gui then item.gui:Destroy() end
+        if item.conn then item.conn:Disconnect() end
     end
-    activeHighlights = {}
+    trackedPlayers = {}
+    for _, conn in pairs(charConnections) do conn:Disconnect() end
+    charConnections = {}
 end
 
 local function applyTracker(targetPlayer)
-    if not targetPlayer.Character then return end
-    local head = targetPlayer.Character:FindFirstChild("Head")
-    if not head then return end
+    local function attach(char)
+        if not char then return end
+        local head = char:WaitForChild("Head", 5)
+        local hum = char:WaitForChild("Humanoid", 5)
+        if not head or not hum then return end
 
-    if head:FindFirstChild("FriendTrackerGui") then
-        head.FriendTrackerGui:Destroy()
+        if head:FindFirstChild("FriendTrackerGui") then head.FriendTrackerGui:Destroy() end
+
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "FriendTrackerGui"
+        billboard.Adornee = head
+        billboard.Size = UDim2.new(0, 200, 0, 50)
+        billboard.StudsOffset = Vector3.new(0, 3, 0)
+        billboard.AlwaysOnTop = true
+        billboard.Parent = head
+
+        local nameLabel = Instance.new("TextLabel")
+        nameLabel.Size = UDim2.new(1, 0, 1, 0)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+        nameLabel.TextStrokeTransparency = 0
+        nameLabel.Font = Enum.Font.FredokaOne
+        nameLabel.TextSize = 16
+        nameLabel.Parent = billboard
+
+        local function updateHealth()
+            local hp = math.floor(hum.Health)
+            local maxHp = math.floor(hum.MaxHealth)
+            nameLabel.Text = "★ " .. targetPlayer.DisplayName .. " [" .. hp .. "/" .. maxHp .. " HP]"
+        end
+
+        updateHealth()
+        local hpConn = hum.HealthChanged:Connect(updateHealth)
+        trackedPlayers[targetPlayer] = {gui = billboard, conn = hpConn}
     end
 
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "FriendTrackerGui"
-    billboard.Adornee = head
-    billboard.Size = UDim2.new(0, 200, 0, 50)
-    billboard.StudsOffset = Vector3.new(0, 3, 0)
-    billboard.AlwaysOnTop = true
-    billboard.Parent = head
-
-    local nameLabel = Instance.new("TextLabel")
-    nameLabel.Size = UDim2.new(1, 0, 1, 0)
-    nameLabel.BackgroundTransparency = 1
-    nameLabel.Text = "★ " .. targetPlayer.DisplayName .. " (@" .. targetPlayer.Name .. ")"
-    nameLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-    nameLabel.TextStrokeTransparency = 0
-    nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    nameLabel.Font = Enum.Font.FredokaOne
-    nameLabel.TextSize = 16
-    nameLabel.Parent = billboard
-
-    table.insert(activeHighlights, billboard)
+    if targetPlayer.Character then task.spawn(function() attach(targetPlayer.Character) end) end
+    local cConn = targetPlayer.CharacterAdded:Connect(function(newChar) task.spawn(function() attach(newChar) end) end)
+    table.insert(charConnections, cConn)
 end
 
-searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+local function updateSearch()
     removeHighlights()
     local textQuery = string.lower(searchBox.Text)
-    
     if textQuery == "" then return end
 
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= LocalPlayer then
-            local name = string.lower(p.Name)
-            local displayName = string.lower(p.DisplayName)
-
-            if string.find(name, textQuery) or string.find(displayName, textQuery) then
+            if string.find(string.lower(p.Name), textQuery) or string.find(string.lower(p.DisplayName), textQuery) then
                 applyTracker(p)
             end
         end
     end
+end
+
+searchBox:GetPropertyChangedSignal("Text"):Connect(updateSearch)
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    if searchBox.Text ~= "" then
+        updateSearch()
+    end
 end)
 
--- 7. ABA NÉVOA
+-- 6. NÉVOA (COM MEMÓRIA DE RENASCIMENTO)
 local fogLabel = Instance.new("TextLabel")
 fogLabel.Size = UDim2.new(1, -40, 0, 20)
 fogLabel.Position = UDim2.new(0, 20, 0, 10)
 fogLabel.BackgroundTransparency = 1
-fogLabel.Text = "NÉVOA PERSON
+fogLabel.Text = "NÉVOA PERSONALIZADA:"
+fogLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+fogLabel.Font = Enum.Font.FredokaOne
+fogLabel.TextSize = 14
+fogLabel.TextXAlignment = Enum.TextXAlignment.Left
+fogLabel.Parent = settingsContent
+
+local colors = {
+    {name = "Rosa", color = Color3.fromRGB(255, 105, 180)},
+    {name = "Azul", color = Color3.fromRGB(0, 191, 255)},
+    {name = "Roxo", color = Color3.fromRGB(148, 0, 211)},
+    {name = "Verde", color = Color3.fromRGB(50, 205, 50)},
+    {name = "Vermelho", color = Color3.fromRGB(255, 50, 50)},
+    {name = "Sem Névoa", color = nil}
+}
+
+local function applyFog()
+    if savedFogColor then
+        Lighting.FogColor = savedFogColor
+        Lighting.FogStart = 0
+        Lighting.FogEnd = 300
+    else
+        Lighting.FogEnd = 9e9
+    end
+end
+
+for i, item in ipairs(colors) do
+    local row = math.floor((i - 1) / 3)
+    local col = (i - 1) % 3
+
+    local colorBtn = Instance.new("TextButton")
+    colorBtn.Size = UDim2.new(0, 85, 0, 35)
+    colorBtn.Position = UDim2.new(0, 20 + (col * 95), 0, 40 + (row * 45))
+    colorBtn.BackgroundColor3 = item.color or Color3.fromRGB(30, 30, 30)
+    colorBtn.Text = item.name
+    colorBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    colorBtn.Font = Enum.Font.FredokaOne
+    colorBtn.TextSize = 12
+    colorBtn.Parent = settingsContent
+
+    Instance.new("UICorner", colorBtn).CornerRadius = UDim.new(0, 6)
+
+    colorBtn.MouseButton1Click:Connect(function()
+        savedFogColor = item.color
+        applyFog()
+    end)
+end
+
+RunService.RenderStepped:Connect(function()
+    if savedFogColor then
+        Lighting.FogColor = savedFogColor
+        Lighting.FogStart = 0
+        Lighting.FogEnd = 300
+    end
+end)
